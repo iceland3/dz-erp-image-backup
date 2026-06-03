@@ -1,0 +1,13 @@
+# 配置文件
+.env
+auth.json
+.idea
+.vs
+
+# 虚拟环境
+.venv/
+
+# 缓存
+__pycache__/
+*.pyc
+*.pyo	
