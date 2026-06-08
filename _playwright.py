@@ -4,13 +4,6 @@ from db_interface_v2 import get_db_connection
 
 save_folder = r"C:\erp_images"
 
-with get_db_connection() as conn:
-    cursor = conn.cursor()
-    cursor.execute("select @@VERSION as version_info")
-    rows = cursor.fetchall()
-    for row in rows:
-        print(row)
-
 # 启动 playwright driver 进程
 p = sync_playwright().start()
 
@@ -27,6 +20,15 @@ with page.expect_download() as download_info:
     page.get_by_role("link", name="下载").click()
 
 download = download_info.value
+
+filename = download.suggested_filename
+with get_db_connection() as conn:
+    cursor = conn.cursor()
+    cursor.execute(
+        "insert into image_backup (billid, tableid, billstate, image) values (?, ?, ?, ?)",
+        (78716, 40, 1, filename)
+    )
+    cursor.commit()
 
 final_path = os.path.join(save_folder, download.suggested_filename)
 
