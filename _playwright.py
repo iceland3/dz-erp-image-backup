@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright
 import os
 from db_interface_v2 import get_db_connection
+from loop_preparation import generate_urls
 
 class ImageDownloader:
     def __init__(self, save_folder=r"C:\erp_images", cdp_url="http://localhost:9222"):
@@ -25,7 +26,7 @@ class ImageDownloader:
 
     def navigate(self, url):
         self.page.goto(url)
-        print(f"页面标题：{self.page.title()}")
+        print(f"url：{url}")
 
     def get_download_links(self):
         links = self.page.get_by_role("link", name="下载").all()
@@ -64,6 +65,7 @@ class ImageDownloader:
 
             for idx, link in enumerate(download_links):
                 self.download_and_save_image(link, idx, billid, tableid, billstate)
+                print(f"billid: {billid}, tableid: {tableid}, billstate: {billstate}, link: {link}")
 
         finally:
             self._disconnect_from_browser()
@@ -72,12 +74,8 @@ class ImageDownloader:
 if __name__ == "__main__":
     downloader = ImageDownloader()
 
-    target_url = "http://dzerp:88/dzerp/aspx/filemanger.aspx?tableid=40&billstate=2&billid=78711"
-    billid = 78711
-    table_id = 40
-    billstate = 2
-
-    downloader.download_all_images(target_url, billid, table_id, billstate)
+    for billid, tableid, billstate, url in generate_urls(20, 50, [11, 30, 40], [1, 2]):
+        downloader.download_all_images(url, billid, tableid, billstate)
 
 # 启动 playwright driver 进程
 # with sync_playwright() as p:
