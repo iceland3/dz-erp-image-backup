@@ -12,18 +12,24 @@ with sync_playwright() as p:
         page.goto("http://dzerp:88/dzerp/aspx/filemanger.aspx?tableid=40&billstate=2&billid=78711")
         print(page.title())
 
-        with page.expect_download() as download_info:
-            page.get_by_role("link", name="下载").click()
+        download_links = page.get_by_role("link", name="下载").all()
+        print(f"找到 {len(download_links)} 个下载链接")
 
-        download = download_info.value
-        filename = download.suggested_filename
+        for idx, link in enumerate(download_links):
+            print(f"正在处理第 {idx+1} 个下载链接")
 
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("insert into image_backup (billid, tableid, billstate, image) values (?, ?, ?, ?)",
-                           (7971640, 11, 2, filename))
-            cursor.commit()
+            with page.expect_download() as download_info:
+                link.click()
 
-        final_path = os.path.join(save_folder, download.suggested_filename)
+            download = download_info.value
+            filename = download.suggested_filename
 
-        download.save_as(final_path)
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("insert into image_backup (billid, tableid, billstate, image) values (?, ?, ?, ?)",
+                               (7971640, 11, 2, filename))
+                cursor.commit()
+
+            final_path = os.path.join(save_folder, download.suggested_filename)
+
+            download.save_as(final_path)
